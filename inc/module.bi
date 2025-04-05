@@ -18,6 +18,7 @@ type module
 
         as string name
         as string c_opts
+        as string l_opts
         as string files
         as string depends
         as string output_

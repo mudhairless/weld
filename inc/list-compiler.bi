@@ -224,7 +224,7 @@ public:
     '' Parameters:
     ''  p - the address of the first object.
     ''  n - the number of objects contained within the memory.
-    declare sub DeAllocate ( byval p as compiler ptr, byval n as uinteger )
+    declare sub DeAllocate ( byval p as fbe_ListNode__compiler ptr, byval n as uinteger )
     
     '' Sub: Construct
     ''  Copy constructs an object at address *p* with *value*.
@@ -330,7 +330,7 @@ public:
 
     '' Function: Empty
     '' Determines if the list contains no elements.
-    declare const function Empty ( ) as bool
+    declare const function Empty ( ) as boolean
 
     '' Function: Begin
     '' Gets an iterator to the first element in the list.
@@ -476,7 +476,7 @@ public:
     '' Parameters:
     '' pred - a predicate that returns true if an element is to be
     '' removed, false otherwise.
-    declare sub RemoveIf ( byval pred as function ( byref as const compiler ) as bool )
+    declare sub RemoveIf ( byval pred as function ( byref as const compiler ) as boolean )
 
 private:
     declare static function T_Allocator as fbe_Allocator_compiler

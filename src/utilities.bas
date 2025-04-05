@@ -1,8 +1,5 @@
 #include once "platform.bi"
-#include once "ext/strings/strmanip.bi"
-
-using ext
-using ext.strings
+#include once "parser.bi"
 
 function getAbsPath( byref p as const string ) as string
 
@@ -12,10 +9,10 @@ function getAbsPath( byref p as const string ) as string
 	
 	#if CURPLATFORM = "unix"
 		if ret[0] = asc("/") then fqstart = true
-		replace(ret,"/./","/")
-		if ret[0] = asc("~") then replace(ret,"~",environ("HOME"))
+		str_replace(ret,"/./","/")
+		if ret[0] = asc("~") then str_replace(ret,"~",environ("HOME"))
 	#else
-		replace(ret,"/","\")
+		str_replace(ret,"/","\")
 		if instr(ret,":\") > 0 then fqstart = true
 	#endif
 	

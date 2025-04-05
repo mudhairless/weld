@@ -1,5 +1,6 @@
-#include "inc/compiler.bi"
-#include "inc/list-compiler.bi"
+#include "compiler.bi"
+#include "list-compiler.bi"
+#include "hash.bi"
 
 operator compiler.cast() as string
 
@@ -49,12 +50,12 @@ end destructor
 
 sub compiler.updatehash()
 
-        this.hash = hashes.crc32( @(this.name[0]), len(this.name), -1 )
-        this.hash = hashes.crc32( @(this.extensions[0]), len(this.extensions), this.hash )
-        this.hash = hashes.crc32( @(this.compile_opts[0]), len(this.compile_opts), this.hash )
-        this.hash = hashes.crc32( @(this.link_opts[0]), len(this.link_opts), this.hash )
-        this.hash = hashes.crc32( @(this.dylib_opts[0]), len(this.dylib_opts), this.hash )
-        this.hash = hashes.crc32( @(this.static_opts[0]), len(this.static_opts), this.hash )
+        this.hash = crc32( @(this.name[0]), len(this.name), -1 )
+        this.hash = crc32( @(this.extensions[0]), len(this.extensions), this.hash )
+        this.hash = crc32( @(this.compile_opts[0]), len(this.compile_opts), this.hash )
+        this.hash = crc32( @(this.link_opts[0]), len(this.link_opts), this.hash )
+        this.hash = crc32( @(this.dylib_opts[0]), len(this.dylib_opts), this.hash )
+        this.hash = crc32( @(this.static_opts[0]), len(this.static_opts), this.hash )
 
 end sub
 

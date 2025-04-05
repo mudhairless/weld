@@ -1,11 +1,13 @@
 #define fbext_NoBuiltinInstanciations() 1
 
-#include once "inc/platform.bi"
-#include once "inc/compiler.bi"
-#include once "inc/module.bi"
+#include once "platform.bi"
+#include once "compiler.bi"
+#include once "module.bi"
 #include once "file.bi"
+#include once "file_iter.bi"
 #include once "dir.bi"
-#include once "inc/parser.bi"
+#include once "parser.bi"
+#include once "options.bi"
 
 dim shared as string gFakefile
 dim shared as string gModToBuild
@@ -21,7 +23,7 @@ gFakefile = gCurDir & SLASH & FAKEFILENAME
 gModToBuild = ""
 
 var iOpts = options.Parser
-iOpts.setHelpHeader(!"weld - The (not just) FreeBASIC build system.\nCopyright 2010-2011 Ebben Feagan http://mud.owlbox.net\n\nUsage: weld [options] [module-to-build]\nIf [module-to-build] is then name of a module in the file weld.it then if will be built,\nif the name passed has an extension then the file weld.it will be built normally,\nas if no module was passed.")
+iOpts.setHelpHeader(!"weld - The (not just) FreeBASIC build system.\nCopyright 2025 Ebben Feagan \n\nUsage: weld [options] [module-to-build]\nIf [module-to-build] is then name of a module in the file weld.it then if will be built,\nif the name passed has an extension then the file weld.it will be built normally,\nas if no module was passed.")
 var v = iOpts.addBool("v","version","Display the program's version.")
 var vv = iOpts.addBool("cc","copyright","Display the program's copyright.")
 var f = iOpts.addOption("f","file",true,,,,!"File to use instead of the default \"weld.it\".")
@@ -36,7 +38,7 @@ var t = iOpts.addOption("at","auto-type",true,,,,!"Used with -a/--auto to set th
 var dumpit = iOpts.addBool("dc","dump-compilers","Prints a list of all supported compilers to std-out")
 iOpts.setHelpFooter(!"Additional help using weld can be found by reading \n\"format.txt\" distributed with weld.\nweld is Free Software distributed under the terms of the BSD license.")
 
-iOpts.parse( __fb_argc__, __fb_argv__ )
+iOpts.parse( __FB_ARGC__, __FB_ARGV__ )
 
 if  iOpts.isSet(ag) then
         if iOpts.isSet(o) = false and iOpts.isSet(m) = false then
@@ -76,7 +78,7 @@ if iOpts.isSet(ag) andalso (iOpts.isSet(m) orelse iOpts.isSet(o)) then
         print #1, using "[&]"; ao
         print #1, "files = ";
         var outstr = ""
-        for n as misc.FILE_ITER = misc.FILE_ITER("*." & agext, fbNormal ) to ""
+        for n as FILE_ITER = FILE_ITER("*." & agext, fbNormal ) to ""
                 outstr = outstr & n.filename & ", "
         next
         outstr = left(trim(outstr),len(outstr)-2)
@@ -98,14 +100,14 @@ endif
 
 if iOpts.isSet(v) then
         ? "weld - The (not just for) FreeBASIC build system."
-        ? using "Version: & Build: &";  FAKE_BS_VERSION_S, CURPLATFORM & "-" & hex(__WELD_BUILDN)
-        ? using "Built with & and &."; __FB_SIGNATURE__, FBEXT_VERSION_STRING
+        ? using "Version: & Build: &";  FAKE_BS_VERSION_S; CURPLATFORM & "-" & hex(__WELD_BUILDN)
+        ? using "Built with &."; __FB_SIGNATURE__
         end 0
 endif
 
 if iOpts.isSet(vv) then
         ? "weld - The (not just for) FreeBASIC build system."
-        ? "Copyright (c) 2010-2011, Ebben Feagan <sir@mud.owlbox.net>"
+        ? "Copyright (c) 2025, Ebben Feagan"
         ? "All rights reserved."
         ?
         ? "Redistribution and use in source and binary forms, with or without"
@@ -253,7 +255,7 @@ function findmod( byref search as const string, byval mods as modlist ptr ) as m
 
         wend
 
-        ? using "ERROR: Module: & not found in weld.it: &"; search, gFakefile
+        ? using "ERROR: Module: & not found in weld.it: &"; search; gFakefile
         ? "*** Build can not proceed. ***"
         end __line__
         return 0
@@ -264,7 +266,7 @@ function findcompiler( byref x as const string ) as compiler ptr
 
         static as string lastx
         static as compiler ptr lastc
-        static as bool doit = true
+        static as boolean doit = true
 
         if doit = false andalso lastx = x then
                 return lastc
@@ -273,24 +275,28 @@ function findcompiler( byref x as const string ) as compiler ptr
         var iter = COMPILERS.Begin()
 
         while iter <> COMPILERS.End_()
+                
                 var z = iter.get()
                 if instr(z->extensions, x) > 0 then
-
                         var ts = z->name
                         z->name = trim(environ(z->name)) & EXE_EXT
                         if z->name = EXE_EXT then
                                 z->name = ts & EXE_EXT
+                        end if
+                        if (not (fileexists(z->name))) then
                                 var path_e = environ("PATH")
                                 dim paths_e() as string
-                                ext.strings.explode(path_e, PATH_SEP, paths_e())
+                                str_split(path_e, paths_e(), PATH_SEP)
 
                                 for n as integer = lbound(paths_e) to ubound(paths_e)
+                                
                                         if fileexists(paths_e(n) & SLASH & z->name) then
                                                 z->name = paths_e(n) & SLASH & z->name
                                                 exit for
                                         end if
                                 next n
-                        end if
+                        end if     
+                        
 
                         lastx = x
                         lastc = z
@@ -320,9 +326,9 @@ sub printstatus( byval numtoadd as uinteger = 0 )
                 endif
                 locate csrlin-1,1
                 if GLOBALS.dele = true orelse GLOBALS.clean = true then
-                        print using "Cleaning Up... [(&) ###%]&"; gCurMod, t, space(20)
+                        print using "Cleaning Up... [(&) ###%]&"; gCurMod; t; space(20)
                 else
-                        print using "Compiling... [(&) ###%]&"; gCurMod, t, space(20)
+                        print using "Compiling... [(&) ###%]&"; gCurMod; t; space(20)
                 endif
 
         endif
@@ -345,16 +351,16 @@ sub compile( byref fi as const string, byref fo as const string, byval m as cons
         if fileexists(fo) = 0 orelse filedatetime(fi) > filedatetime(fo) then
 
                 compile_str = c->compile_opts
-                strings.replace(compile_str,"$in",fi)
-                strings.replace(compile_str,"$out",fo)
-                strings.replace(compile_str,"$buildno",str(m->buildno))
-                strings.replace(compile_str,"$opts", GLOBALS.options & " " & m->c_opts)
+                str_replace(compile_str,"$in",fi)
+                str_replace(compile_str,"$out",fo)
+                str_replace(compile_str,"$buildno",str(m->buildno))
+                str_replace(compile_str,"$opts", GLOBALS.options & " " & m->c_opts)
                 if m->type_ < mtype.dylib then
-                        strings.replace(compile_str,"$main", " -m " & mf)
+                        str_replace(compile_str,"$main", " -m " & mf)
                 else
-                        strings.replace(compile_str,"$main","")
+                        str_replace(compile_str,"$main","")
                 endif
-                '? c->name & " " & trim(compile_str)
+'                ? c->name & " " & trim(compile_str)
                 var ret = exec( c->name, trim(compile_str) )
                 if ret > 0 then
                         ? "ERROR: Building " & fi & " failed."
@@ -378,22 +384,22 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
 
         if (not GLOBALS.clean) then printstatus(1)
 
-        if mtb->depends <> "" then
+        if (mtb->depends <> "") then
                 'got to build/clean dependancies first
 
                 dim dependd() as string
-                strings.explode(mtb->depends,",",dependd())
+                str_split(mtb->depends, dependd(), ",")
                 if (not GLOBALS.clean) then printstatus(ubound(dependd))
                 for n as integer = lbound(dependd) to ubound(dependd)
                         dependd(n) = trim(dependd(n))
                         var grue = findmod(dependd(n),allmods)
                         if grue = 0 then
-                                ? using !"ERROR: Unable to locate dependancy \"&\" for module \"&\""; dependd(n),mtb->name
+                                ? using !"ERROR: Unable to locate dependancy \"&\" for module \"&\""; dependd(n); mtb->name
                                 end __line__
                         endif
                         var fjai = dobuild(grue,allmods)
                         if fjai <> 0 then
-                                ? using !"ERROR: Unable to build dependancy \"&\" for module \"&\""; dependd(n),mtb->name
+                                ? using !"ERROR: Unable to build dependancy \"&\" for module \"&\""; dependd(n); mtb->name
                                 end __line__
                         endif
                 next n
@@ -401,10 +407,12 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
 
         endif
 
-        if mtb->files = "" then return 0
-
-        if GLOBALS.builddir <> "" andalso GLOBALS.clean <> true andalso GLOBALS.dele <> true then
-                mkdir GLOBALS.builddir
+        if (mtb->files = "") then return 0
+        
+        if (GLOBALS.builddir <> "") then
+                if (GLOBALS.clean = false andalso GLOBALS.dele = false) then
+                        mkdir GLOBALS.builddir
+                endif
         endif
 
         gCurMod = mtb->name
@@ -443,7 +451,7 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
                 ? "not implemented atm"
         endif
 
-        strings.explode(mtb->files,",",files())
+        str_split(mtb->files, files(), ",")
         printstatus(ubound(files))
 
         redim files_o(ubound(files))
@@ -455,10 +463,12 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
                 var cext = right(files(n),len(files(n))-instr(files(n),"."))
 
                 files_o(n) = left(files(n),len(files(n))-len(cext)) & "o"
-                strings.replace(files_o(n), SLASH, "_")
+                str_replace(files_o(n), SLASH, "_")
+                str_replace(files_o(n), OTHERSLASH, "_")
                 if GLOBALS.builddir <> "" then
                         files_o(n) = GLOBALS.builddir & SLASH & trim(files_o(n))
                 end if
+
 
                 var comp = findcompiler(cext)
                 if comp = 0 then
@@ -469,7 +479,7 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
                 compile( files(n), files_o(n), mtb, comp, mainf )
         next n
 
-        var olist = strings.join(files_o()," ")
+        var olist = str_join(files_o()," ")
 
         var compiler_str = ""
         var comp = findcompiler(right(files(0),len(files(0))-instr(files(0),".")))
@@ -479,43 +489,43 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
         endif
         select case type_
                 case mtype.exe
-                        compiler_str = comp->link_opts
-                        strings.replace(compiler_str,"$main"," -m " & mainf)
+                        compiler_str = trim(comp->link_opts)
+                        str_replace(compiler_str,"$main"," -m " & mainf)
                 case mtype.console
-                        compiler_str = comp->link_opts
-                        strings.replace(compiler_str,"$opts","$opts -s console")
-                        strings.replace(compiler_str,"$main"," -m " & mainf)
+                        compiler_str = trim(comp->link_opts)
+                        str_replace(compiler_str,"$opts","$opts -s console")
+                        str_replace(compiler_str,"$main"," -m " & mainf)
                 case mtype.gui
-                        compiler_str = comp->link_opts
-                        strings.replace(compiler_str,"$opts","$opts -s gui")
-                        strings.replace(compiler_str,"$main"," -m " & mainf)
+                        compiler_str = trim(comp->link_opts)
+                        str_replace(compiler_str,"$opts","$opts -s gui")
+                        str_replace(compiler_str,"$main"," -m " & mainf)
 
                 case mtype.dylib
-                        compiler_str = comp->dylib_opts
+                        compiler_str = trim(comp->dylib_opts)        
 
                 case mtype.static_
-                        compiler_str = comp->static_opts
+                        compiler_str = trim(comp->static_opts)
 
         end select
 
-        var repopts = trim(GLOBALS.options & " " & mtb->c_opts)
-        strings.replace(compiler_str,"$opts", repopts)
-        strings.replace(compiler_str,"$ins",olist)
+        var repopts = trim(GLOBALS.options & " " & mtb->c_opts & " " & mtb->l_opts)
+        str_replace(compiler_str,"$opts", repopts)
+        str_replace(compiler_str,"$ins",olist)
 
         if mtb->output_ = "" then
                 select case type_
                         case mtype.exe, mtype.console, mtype.gui
-                                strings.replace(compiler_str,"$out",mtb->name & EXE_EXT)
+                                str_replace(compiler_str,"$out",mtb->name & EXE_EXT)
                         case else
-                                strings.replace(compiler_str,"$out",mtb->name )
+                                str_replace(compiler_str,"$out",mtb->name )
                 end select
 
         else
                 select case type_
                         case mtype.exe, mtype.console, mtype.gui
-                                strings.replace(compiler_str,"$out",mtb->output_ & EXE_EXT)
+                                str_replace(compiler_str,"$out",mtb->output_ & EXE_EXT)
                         case else
-                                strings.replace(compiler_str,"$out",mtb->output_ )
+                                str_replace(compiler_str,"$out",mtb->output_ )
                 end select
         endif
 

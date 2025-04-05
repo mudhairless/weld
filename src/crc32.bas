@@ -1,3 +1,6 @@
+#include once "list.bi"
+#include once "hash.bi"
+
 function crc32 ( byval buf as const any ptr, byval buf_len as uinteger, byval crc as ulong ) as ulong
 
 	static crc_table(256) as ulong => { _

@@ -1,0 +1,35 @@
+ 0.99.9a
+
+    Decoupled from the Extended Library as it is deprecated and not supported by modern FreeBASIC compilers.
+
+ 0.99.7
+
+    Fixes some errors that could cause a broken build.
+    Added build number support default FreeBASIC compiler defines __WELD_BUILDN=buildnumber, other languages can use the $buildno replacement for a similar option for that language.
+    Also, now if there is no weld.it file in the current directory but there is a src directory weld will automatically retry with src as the current directory.
+
+.99.6
+
+    Mostly just bugfixes and more replacements of fake with weld.
+    Major bug involving autogeneration where it would require both -am and -ao when only one is necessary (both can be used though).
+    Major bug involving library compilation where you would get errors about main already being defined was fixed.
+
+.99.5
+
+    Added Global and User (*nix and win32 only) level configuration file support. Global file is:
+        Windows: exepath\global.config
+        *nix: /etc/weld/global.config
+        DOS: exepath\weld.cfg
+
+    User file is:
+        Windows: %APPDATA%\weld.config
+        *nix: ~/.weld.config
+
+    Configurations are parsed in the order GLOBAL - USER - LOCAL. Only Compiler and Global sections are recognized at the GLOBAL and USER levels. Later definitions overwrite existing values. A sample global configuration file is provided in the Data directory providing support for fbc, gcc and g++.
+    Compiler definitions now support multiple file extensions.
+
+.99d
+
+    Added @platform: specifiers to module parsing, supported values are win32, dos and unix
+    Changed default behaviour when a file with extension is passed to attempt to use a weld.it in that directory for IDE compatibility.
+    Added option -r/--run for IDE compatibility

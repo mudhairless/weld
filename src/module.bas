@@ -1,5 +1,5 @@
-#include "inc/module.bi"
-#include "inc/list-module.bi"
+#include "module.bi"
+#include "list-module.bi"
 #include "hash.bi"
 
 constructor module()

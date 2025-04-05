@@ -33,13 +33,14 @@ files = parser.bas
 type = static
 '/
 
-#include once "inc/platform.bi"
+#include once "platform.bi"
 #include once "compiler.bi"
 #include once "module.bi"
 #include once "list-compiler.bi"
 #include once "list-module.bi"
 #include once "parser.bi"
 #include once "file.bi"
+#include once "crt/string.bi"
 
 declare sub listsections( inputf() as string, outputl() as string )
 declare sub listkeys( byref section as const string, inputf() as string, outputkey() as string, outputval() as string )
@@ -105,7 +106,7 @@ sub reporterror( byval linen as uinteger, byref message as const string )
 
         var ff = freefile
         open err as ff
-        print #ff, using "Error ###: &"; linen, message
+        print #ff, using "Error ###: &"; linen; message
         close
         end 2
 
@@ -197,8 +198,8 @@ function str_split (byref s as const string, result() as string, byref delimiter
         if 0 > limit then ss_count -= -limit
 
         ' fill result array..
-        redim result(0 to ss_count - 1) as string
-        for ss as integer = 0 to ss_count - 1
+        redim result(0 to ss_count) as string
+        for ss as integer = 0 to ss_count
             result(ss) = mid(s, dt(ss).start + 1, dt(ss).length)
         next
 
@@ -321,19 +322,27 @@ function parse_fakefile( byref fake_f as const string, _
                                         for m as integer = lbound(keys) to ubound(keys) - 1
                                                 platformdecider:
                                                 select case lcase(trim(keys(m)))
+                                                        case "link_options"
+                                                                zx.l_opts = trim(values(m))
+
                                                         case "options"
                                                                 zx.c_opts = trim(values(m))
+
                                                         case "files"
                                                                 zx.files = trim(values(m))
                                                                 #if CURPLATFORM = "unix"
                                                                 str_replace(zx.files,"\","/")
                                                                 #endif
+
                                                         case "depends"
                                                                 zx.depends = trim(values(m))
+
                                                         case "output"
                                                                 zx.output_ = trim(values(m))
+
                                                         case "type"
                                                                 zx.type_ = getTypeFromString(values(m))
+
                                                         case "main"
                                                                 zx.main_ = trim(values(m))
 
@@ -464,3 +473,32 @@ sub listkeys( byref section as const string, inputf() as string, outputkey() as 
         next
 
 end sub
+
+function str_join (s() as const string, byref glue as const string) as string
+
+        var numstrings = ubound(s) - lbound(s) + 1
+
+        if 1 = numstrings then return s(0)
+
+        var finalsize = 0
+        for i as integer = lbound(s) to ubound(s)
+                finalsize += len(s(i))
+        next
+        finalsize += len(glue) * (numstrings - 1)
+
+        var result = space(finalsize)
+        var dst = cast(ubyte ptr,@result[0])
+
+        for i as integer = lbound(s) to ubound(s)
+                memcpy(dst, @(s(i)[0]), len(s(i)))
+                dst += len(s(i))
+
+                if 0 < len(glue) then
+                        memcpy(dst, @glue[0], len(glue))
+                        dst += len(glue)
+                end if
+        next
+
+        return result
+
+end function
