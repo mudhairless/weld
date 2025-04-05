@@ -1,0 +1,3 @@
+[submodule "submodules/fbeoptions"]
+	path = submodules/fbeoptions
+	url = https://github.com/mudhairless/fbeoptions

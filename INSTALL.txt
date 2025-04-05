@@ -1,0 +1,2 @@
+Copy data/global.config either to the same directory as weld.exe or 
+rename to weld.config and place in C:\Users\YourUserName\AppData\Roaming

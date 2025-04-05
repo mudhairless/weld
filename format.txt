@@ -1,0 +1,32 @@
+[GLOBAL] #global options are added to every module's compilation.
+options = -w all
+builddir = .obj
+#object files by default are put in .obj/ you do not have to add this
+#for this behaviour, but you can override it if you wish.
+
+#this is a comment, atm you can only use them on their own line or at a 
+#section header like this:
+[all] #if not provided will default to the first module in the file
+depends = weld
+
+#dependencies must all be listed in the same file atm
+
+[weld] #local options only apply to this module
+files = main.bas, parser.bas, compiler.bas, module.bas
+@unix:options = -i path/to/ext/headers -p path/to/ext/bin -p path/to/ext/lib/platform
+@win32:options = -i windows appropriate paths
+#@dos:options etc
+#depends = somelib
+type = exe
+@win32:type = console
+#directives are processed in order, @win32:type overrides type on windows in this case
+#if type came after win32:type then it would override it.
+#other supported types for exes are "console" and "gui"
+
+[welddll] #this demonstrates building a dll (or .so on linux)
+files = parser.bas, compiler.bas, module.bas
+type = dylib
+
+[weldstatic] #and this would build a static library
+files = parser.bas
+type = static
