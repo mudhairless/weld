@@ -18,7 +18,12 @@
 @copy submodules\fbeoptions\inc\options.bi inc
 @copy submodules\fbeoptions\lib\libfbeoptions.a lib
 
-
+@cd submodules\fbefile
+@cmd /c winbuild-release.bat
+@cd ..\..
+@xcopy /E submodules\fbefile\inc inc
+@copy submodules\fbefile\lib\libfbefile.a lib
+@copy submodules\fbefile\lib\libfbefilemt.a lib
 
 @echo Build Objects
 %fbc% -c -i inc -w all -g -m main src/main.bas
@@ -29,10 +34,9 @@
 %fbc% -c -i inc -w all -g src/parser.bas
 %fbc% -c -i inc -w all -g src/utilities.bas
 %fbc% -c -i inc -w all -g src/crc32.bas
-%fbc% -c -i inc -w all -g src/file_iter.bas
 
 @echo Linking
-%fbc% -p lib -m main src/main.o src/crc32.o src/file_iter.o src/compiler.o src/list-compiler.o src/module.o src/list-module.o src/parser.o src/utilities.o weld.rc -x bootstrap-weld.exe
+%fbc% -p lib -m main src/main.o src/crc32.o src/compiler.o src/list-compiler.o src/module.o src/list-module.o src/parser.o src/utilities.o weld.rc -x bootstrap-weld.exe
 
 @echo Making Final exe
 @bootstrap-weld.exe

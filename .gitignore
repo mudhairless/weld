@@ -16,3 +16,5 @@ gmon.out
 buildreport.txt
 profile.txt
 weld.cnt
+inc/fbefile/**
+inc/options.bi

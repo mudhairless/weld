@@ -4,8 +4,7 @@
 #include once "compiler.bi"
 #include once "module.bi"
 #include once "file.bi"
-#include once "file_iter.bi"
-#include once "dir.bi"
+#include once "fbefile/file_iter.bi"
 #include once "parser.bi"
 #include once "options.bi"
 
@@ -78,7 +77,7 @@ if iOpts.isSet(ag) andalso (iOpts.isSet(m) orelse iOpts.isSet(o)) then
         print #1, using "[&]"; ao
         print #1, "files = ";
         var outstr = ""
-        for n as FILE_ITER = FILE_ITER("*." & agext, fbNormal ) to ""
+        for n as fbe.FILE_ITER = fbe.FILE_ITER("*." & agext, fbe.fbeNormal ) to ""
                 outstr = outstr & n.filename & ", "
         next
         outstr = left(trim(outstr),len(outstr)-2)
