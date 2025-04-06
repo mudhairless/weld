@@ -16,12 +16,17 @@ files = main.bas, parser.bas, compiler.bas, module.bas
 @unix:options = -i path/to/ext/headers -p path/to/ext/bin -p path/to/ext/lib/platform
 @win32:options = -i windows appropriate paths
 #@dos:options etc
-#depends = somelib
+#link_options can be specified to pass options to the compiler only on the link step
+link_options = -l libname
+#intra-project dependencies are speficied with a comma separated list of modules to build before this one
+depends = someothermodule
 type = exe
 @win32:type = console
 #directives are processed in order, @win32:type overrides type on windows in this case
 #if type came after win32:type then it would override it.
 #other supported types for exes are "console" and "gui"
+#output can be used to change the output name independant of the module name
+output = notweld
 
 [welddll] #this demonstrates building a dll (or .so on linux)
 files = parser.bas, compiler.bas, module.bas
