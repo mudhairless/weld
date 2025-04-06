@@ -34,7 +34,7 @@
 
 #ifdef __fb_win32__
     #define CURPLATFORM "win32"
-    #define HOMEDIR_C environ("APPDATA") & "\weld.config"
+    #define HOMEDIR_C environ("APPDATA") & "\weld\weld.config"
     #define GLOBAL_C exepath & "\global.config"
 #elseif defined(__fb_dos__)
     #define CURPLATFORM "dos"

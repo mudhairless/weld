@@ -101,6 +101,9 @@ if iOpts.isSet(v) then
         ? "weld - The (not just for) FreeBASIC build system."
         ? using "Version: & Build: &";  FAKE_BS_VERSION_S; CURPLATFORM & "-" & hex(__WELD_BUILDN)
         ? using "Built with &."; __FB_SIGNATURE__
+        ? "System Config Paths:"
+        ? using "    Global Config: &, Present? &"; GLOBAL_C; iif(fileexists(GLOBAL_C), "Y", "N")
+        ? using "    User Config: &, Present? &"; HOMEDIR_C; iif(fileexists(HOMEDIR_C), "Y", "N")
         end 0
 endif
 
