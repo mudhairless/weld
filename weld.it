@@ -1,5 +1,5 @@
 [weld]
-files = src/compiler.bas, src/crc32.bas, src/list-compiler.bas, src/list-module.bas, src/main.bas, src/module.bas, src/parser.bas, src/utilities.bas
+files = src/compiler.bas, src/crc32.bas, src/list-compiler.bas, src/list-module.bas, src/main.bas, src/module.bas, src/parser.bas, src/utilities.bas, src/semver.bas
 options = -i inc -p lib -w all
 @win32:link_options = weld.rc
 main = main

@@ -9,7 +9,19 @@
 @del weld.exe
 @del bootstrap-weld.exe
 @del inc\options.bi
+@del inc\strings.bi
+@del inc\strings\*.bi
+@del inc\strings\detail\*.bi
+@rmdir inc\strings\detail
+@rmdir inc\strings
+@del inc\fbefile\*.bi
+@del inc\fbefile\detail\*.bi
+@rmdir inc\fbefile\detail
+@rmdir inc\fbefile
 @del lib\libfbeoptions.a
+@del lib\libfbefile.a
+@del lib\libfbefilemt.a
+@del lib\libfbestrings.a
 
 @echo Building Submodules
 @cd submodules\fbeoptions
@@ -40,9 +52,10 @@
 %fbc% -c -i inc -w all -g src/parser.bas
 %fbc% -c -i inc -w all -g src/utilities.bas
 %fbc% -c -i inc -w all -g src/crc32.bas
+%fbc% -c -i inc -w all -g src/semver.bas
 
 @echo Linking
-%fbc% -p lib -m main src/main.o src/crc32.o src/compiler.o src/list-compiler.o src/module.o src/list-module.o src/parser.o src/utilities.o weld.rc -x bootstrap-weld.exe
+%fbc% -p lib -m main src/main.o src/crc32.o src/compiler.o src/list-compiler.o src/module.o src/list-module.o src/parser.o src/utilities.o src/semver.o weld.rc -x bootstrap-weld.exe
 
 @echo Making Final exe
 @bootstrap-weld.exe
