@@ -4,3 +4,6 @@
 [submodule "submodules/fbefile"]
 	path = submodules/fbefile
 	url = https://github.com/mudhairless/fbefile
+[submodule "submodules/fbestrings"]
+	path = submodules/fbestrings
+	url = https://github.com/mudhairless/fbestrings

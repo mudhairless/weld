@@ -13,12 +13,16 @@ dim shared as string gModToBuild
 dim shared as string gCurDir
 dim shared as string gCurMod
 
+#ifndef __WELD_BUILDN
+#define __WELD_BUILDN &hDEADBEEF
+#endif
+
 declare sub printstatus( byval numtoadd as uinteger = 0 )
 declare function findmod( byref search as const string, byval mods as modlist ptr ) as module ptr
 declare function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as integer
 
 gCurDir = curdir()
-gFakefile = gCurDir & SLASH & FAKEFILENAME
+gFakefile = gCurDir & SLASH & DEFAULT_BUILD_FILE
 gModToBuild = ""
 
 var iOpts = options.Parser
@@ -71,8 +75,8 @@ if iOpts.isSet(ag) andalso (iOpts.isSet(m) orelse iOpts.isSet(o)) then
         endif
 
 
-        open FAKEFILENAME for binary access write as #1
-        print #1, "#Generated Automagically by weld " & FAKE_BS_VERSION_S
+        open DEFAULT_BUILD_FILE for binary access write as #1
+        print #1, "#Generated Automagically by weld " & WELD_VERSION_S
         print #1, "#Edit this file to you heart's content."
         print #1, using "[&]"; ao
         print #1, "files = ";
@@ -93,13 +97,11 @@ if iOpts.isSet(ag) andalso (iOpts.isSet(m) orelse iOpts.isSet(o)) then
 
 endif
 
-#ifndef __WELD_BUILDN
-#define __WELD_BUILDN &hDEADBEEF
-#endif
+
 
 if iOpts.isSet(v) then
         ? "weld - The (not just for) FreeBASIC build system."
-        ? using "Version: & Build: &";  FAKE_BS_VERSION_S; CURPLATFORM & "-" & hex(__WELD_BUILDN)
+        ? using "Version: & Build: &";  WELD_VERSION_S; CURPLATFORM & "-" & hex(__WELD_BUILDN)
         ? using "Built with &."; __FB_SIGNATURE__
         ? "System Config Paths:"
         ? using "    Global Config: &, Present? &"; GLOBAL_C; iif(fileexists(GLOBAL_C), "Y", "N")
@@ -288,7 +290,7 @@ function findcompiler( byref x as const string ) as compiler ptr
                         if (not (fileexists(z->name))) then
                                 var path_e = environ("PATH")
                                 dim paths_e() as string
-                                str_split(path_e, paths_e(), PATH_SEP)
+                                strings.split(path_e, paths_e(), PATH_SEP)
 
                                 for n as integer = lbound(paths_e) to ubound(paths_e)
                                 
@@ -353,14 +355,14 @@ sub compile( byref fi as const string, byref fo as const string, byval m as cons
         if fileexists(fo) = 0 orelse filedatetime(fi) > filedatetime(fo) then
 
                 compile_str = c->compile_opts
-                str_replace(compile_str,"$in",fi)
-                str_replace(compile_str,"$out",fo)
-                str_replace(compile_str,"$buildno",str(m->buildno))
-                str_replace(compile_str,"$opts", GLOBALS.options & " " & m->c_opts)
+                strings.replace(compile_str,"$in",fi)
+                strings.replace(compile_str,"$out",fo)
+                strings.replace(compile_str,"$buildno",str(m->buildno))
+                strings.replace(compile_str,"$opts", GLOBALS.options & " " & m->c_opts)
                 if m->type_ < mtype.dylib then
-                        str_replace(compile_str,"$main", " -m " & mf)
+                        strings.replace(compile_str,"$main", " -m " & mf)
                 else
-                        str_replace(compile_str,"$main","")
+                        strings.replace(compile_str,"$main","")
                 endif
 '                ? c->name & " " & trim(compile_str)
                 var ret = exec( c->name, trim(compile_str) )
@@ -390,7 +392,7 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
                 'got to build/clean dependancies first
 
                 dim dependd() as string
-                str_split(mtb->depends, dependd(), ",")
+                strings.split(mtb->depends, dependd(), ",")
                 if (not GLOBALS.clean) then printstatus(ubound(dependd))
                 for n as integer = lbound(dependd) to ubound(dependd)
                         dependd(n) = trim(dependd(n))
@@ -453,7 +455,7 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
                 ? "not implemented atm"
         endif
 
-        str_split(mtb->files, files(), ",")
+        strings.split(mtb->files, files(), ",")
         printstatus(ubound(files))
 
         redim files_o(ubound(files))
@@ -465,8 +467,8 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
                 var cext = right(files(n),len(files(n))-instr(files(n),"."))
 
                 files_o(n) = left(files(n),len(files(n))-len(cext)) & "o"
-                str_replace(files_o(n), SLASH, "_")
-                str_replace(files_o(n), OTHERSLASH, "_")
+                strings.replace(files_o(n), SLASH, "_")
+                strings.replace(files_o(n), OTHERSLASH, "_")
                 if GLOBALS.builddir <> "" then
                         files_o(n) = GLOBALS.builddir & SLASH & trim(files_o(n))
                 end if
@@ -481,7 +483,7 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
                 compile( files(n), files_o(n), mtb, comp, mainf )
         next n
 
-        var olist = str_join(files_o()," ")
+        var olist = strings.join(files_o()," ")
 
         var compiler_str = ""
         var comp = findcompiler(right(files(0),len(files(0))-instr(files(0),".")))
@@ -492,15 +494,15 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
         select case type_
                 case mtype.exe
                         compiler_str = trim(comp->link_opts)
-                        str_replace(compiler_str,"$main"," -m " & mainf)
+                        strings.replace(compiler_str,"$main"," -m " & mainf)
                 case mtype.console
                         compiler_str = trim(comp->link_opts)
-                        str_replace(compiler_str,"$opts","$opts -s console")
-                        str_replace(compiler_str,"$main"," -m " & mainf)
+                        strings.replace(compiler_str,"$opts","$opts -s console")
+                        strings.replace(compiler_str,"$main"," -m " & mainf)
                 case mtype.gui
                         compiler_str = trim(comp->link_opts)
-                        str_replace(compiler_str,"$opts","$opts -s gui")
-                        str_replace(compiler_str,"$main"," -m " & mainf)
+                        strings.replace(compiler_str,"$opts","$opts -s gui")
+                        strings.replace(compiler_str,"$main"," -m " & mainf)
 
                 case mtype.dylib
                         compiler_str = trim(comp->dylib_opts)        
@@ -511,23 +513,23 @@ function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as int
         end select
 
         var repopts = trim(GLOBALS.options & " " & mtb->c_opts & " " & mtb->l_opts)
-        str_replace(compiler_str,"$opts", repopts)
-        str_replace(compiler_str,"$ins",olist)
+        strings.replace(compiler_str,"$opts", repopts)
+        strings.replace(compiler_str,"$ins",olist)
 
         if mtb->output_ = "" then
                 select case type_
                         case mtype.exe, mtype.console, mtype.gui
-                                str_replace(compiler_str,"$out",mtb->name & EXE_EXT)
+                                strings.replace(compiler_str,"$out",mtb->name & EXE_EXT)
                         case else
-                                str_replace(compiler_str,"$out",mtb->name )
+                                strings.replace(compiler_str,"$out",mtb->name )
                 end select
 
         else
                 select case type_
                         case mtype.exe, mtype.console, mtype.gui
-                                str_replace(compiler_str,"$out",mtb->output_ & EXE_EXT)
+                                strings.replace(compiler_str,"$out",mtb->output_ & EXE_EXT)
                         case else
-                                str_replace(compiler_str,"$out",mtb->output_ )
+                                strings.replace(compiler_str,"$out",mtb->output_ )
                 end select
         endif
 

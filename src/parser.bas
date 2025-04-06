@@ -133,92 +133,6 @@ function getTypeFromString( byref x as string ) as mtype
 
 end function
 
-function str_split (byref s as const string, result() as string, byref delimiter as const string, byval limit as integer = -1) as integer
-
-        type substr__
-                as integer start, length
-        end type
-
-        const max_substrings__ = 100000
-
-        static dt(0 to max_substrings__ - 1) as substr__
-
-        if 0 = len(delimiter) then return false
-        function = true
-
-        var ss_count = 0
-
-        var it = @s[0]
-        do while it <> @s[0] + len(s)
-
-            var found_delim = true
-
-            ' try to match first delimiter char..
-            if *it <> delimiter[0] then
-                found_delim = false
-
-            ' try to match rest of delimiter..
-            elseif len(delimiter) > 1 then
-                var it2 = it + 1
-                for j as integer = 1 to len(delimiter) - 1
-                    if *it2 <> delimiter[j] then
-                        found_delim = false : exit for
-                    end if
-                    it2 += 1
-                next
-
-            end if
-
-            if not found_delim then
-                it += 1
-
-            else
-                ' returning a maximum number of substrings ?
-                if 0 < limit then
-                    if ss_count = limit - 1 then exit do
-                end if
-
-                var index = it - @s[0]
-
-                dt(ss_count).length = index - dt(ss_count).start
-                ss_count += 1
-                dt(ss_count).start = index + len(delimiter)
-
-                it += len(delimiter)
-
-            end if
-
-        loop
-
-        ' last substring is the remaining string..
-        dt(ss_count).length = len(s) - dt(ss_count).start + 1
-        ss_count += 1
-
-        ' returning all but a number of remaining substrings ?
-        if 0 > limit then ss_count -= -limit
-
-        ' fill result array..
-        redim result(0 to ss_count) as string
-        for ss as integer = 0 to ss_count
-            result(ss) = mid(s, dt(ss).start + 1, dt(ss).length)
-        next
-
-        function = ss_count
-
-end function
-
-Sub str_replace (subject As String, oldtext As const String, newtext As const String)
-  'replaces all occurances of oldtext in subject with newtext
-  Dim As Integer n
-  If subject <> "" And oldtext <> "" And oldtext <> newtext Then
-    n = Instr(subject, oldtext)
-    Do While n <> 0
-      subject = Left(subject,n-1) & newtext & Right(subject,Len(subject)- n - Len(oldtext)+ 1)
-      n = Instr(n + Len(newtext),subject, oldtext)
-    Loop
-  Endif
-End Sub
-
 function parse_fakefile( byref fake_f as const string, _
                         byval ml as modlist ptr = 0 ) as modlist ptr
 
@@ -243,7 +157,7 @@ function parse_fakefile( byref fake_f as const string, _
 
         redim as string ffile()
 
-        str_split(fakefile, ffile(), chr(1))
+        strings.split(fakefile, ffile(), chr(1))
 
         fakefile = ""
 
@@ -331,7 +245,7 @@ function parse_fakefile( byref fake_f as const string, _
                                                         case "files"
                                                                 zx.files = trim(values(m))
                                                                 #if CURPLATFORM = "unix"
-                                                                str_replace(zx.files,"\","/")
+                                                                strings.replace(zx.files,"\","/")
                                                                 #endif
 
                                                         case "depends"
@@ -473,32 +387,3 @@ sub listkeys( byref section as const string, inputf() as string, outputkey() as 
         next
 
 end sub
-
-function str_join (s() as const string, byref glue as const string) as string
-
-        var numstrings = ubound(s) - lbound(s) + 1
-
-        if 1 = numstrings then return s(0)
-
-        var finalsize = 0
-        for i as integer = lbound(s) to ubound(s)
-                finalsize += len(s(i))
-        next
-        finalsize += len(glue) * (numstrings - 1)
-
-        var result = space(finalsize)
-        var dst = cast(ubyte ptr,@result[0])
-
-        for i as integer = lbound(s) to ubound(s)
-                memcpy(dst, @(s(i)[0]), len(s(i)))
-                dst += len(s(i))
-
-                if 0 < len(glue) then
-                        memcpy(dst, @glue[0], len(glue))
-                        dst += len(glue)
-                end if
-        next
-
-        return result
-
-end function

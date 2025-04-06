@@ -9,10 +9,10 @@ function getAbsPath( byref p as const string ) as string
 	
 	#if CURPLATFORM = "unix"
 		if ret[0] = asc("/") then fqstart = true
-		str_replace(ret,"/./","/")
-		if ret[0] = asc("~") then str_replace(ret,"~",environ("HOME"))
+		strings.replace(ret,"/./","/")
+		if ret[0] = asc("~") then strings.replace(ret,"~",environ("HOME"))
 	#else
-		str_replace(ret,"/","\")
+		strings.replace(ret,"/","\")
 		if instr(ret,":\") > 0 then fqstart = true
 	#endif
 	

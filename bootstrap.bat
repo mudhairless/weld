@@ -25,6 +25,12 @@
 @copy submodules\fbefile\lib\libfbefile.a lib
 @copy submodules\fbefile\lib\libfbefilemt.a lib
 
+@cd submodules\fbestrings
+@cmd /c winbuild-release.bat
+@cd ..\..
+@xcopy /E /Y submodules\fbestrings\inc inc
+@copy submodules\fbestrings\lib\libfbestrings.a lib
+
 @echo Build Objects
 %fbc% -c -i inc -w all -g -m main src/main.bas
 %fbc% -c -i inc -w all -g src/compiler.bas

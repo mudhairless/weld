@@ -1,6 +1,7 @@
- 0.99.9a
+ 0.99.9-alpha
 
     Decoupled from the Extended Library as it is deprecated and not supported by modern FreeBASIC compilers.
+    Adds link_options to supported module directives
 
  0.99.7
 

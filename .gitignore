@@ -18,3 +18,5 @@ profile.txt
 weld.cnt
 inc/fbefile/**
 inc/options.bi
+inc/strings.bi
+inc/strings/**

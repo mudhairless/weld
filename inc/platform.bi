@@ -4,9 +4,21 @@
 #ifndef __WELD_PLATFORM_BI__
 #define __WELD_PLATFORM_BI__ -1
 
-#define FAKE_BS_VERSION_S "0.99.9a"
+#define WELD_VERSION_MAJOR 0
+#define WELD_VERSION_MINOR 99
+#define WELD_VERSOIN_PATCH 9
+#define WELD_VERSION_LABEL "alpha"
 
-#define FAKEFILENAME "weld.it"
+#ifdef WELD_VERSION_LABEL
+    #define WELD_VERSION_S WELD_VERSION_MAJOR & "." & WELD_VERSION_MINOR & "." & WELD_VERSOIN_PATCH & "-" & WELD_VERSION_LABEL
+#else
+    #define WELD_VERSION_S WELD_VERSION_MAJOR & "." & WELD_VERSION_MINOR & "." & WELD_VERSOIN_PATCH
+#endif
+
+
+#define DEFAULT_BUILD_FILE "weld.it"
+
+#define GIT_GET_COMMIT_HASH "git rev-parse --short HEAD"
 
 #ifdef __fb_linux__
     #define SLASH "/"
