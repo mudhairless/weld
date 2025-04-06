@@ -20,10 +20,21 @@ weld is stable enough at this point to ease your development. It supports increm
 ## History
 This was originally built in 2011 using the Extended Library but has been updated to remove that dependency and support modern compilers.
 
-## Bootstrap Building on Windows
+## Building with Weld
+0. Run `git submodule init` to bring in dependencies or `git submodule update --remote` to update them.
+1. Use the `bootstrap.sh` if this is the first time building or dependencies have updated
+2. Run `weld` in the project directory
 
+## Bootstrap Building on Windows
+0. Run `git submodule init` to bring in dependencies or `git submodule update --remote` to update them.
 1. Open a Command Prompt (if using powershell run "cmd" to get the proper support for batch file features used)
 2. Define a variable for the FreeBASIC compiler to use: "SET FBC=fbc32" or "SET FBC=fbc64" for 32bit or 64bit support
 3. Run bootstrap.bat
-4. Copy weld.exe to a directory on the PATH
 
+## Bootstrap Building on Unix (untested)
+0. Run `git submodule init` to bring in dependencies or `git submodule update --remote` to update them.
+1. Submodule Makefiles expect an `fbc` to be on the path, if you are using both 32 and 64 bit compilers you should create a symbolic link named fbc that points to the preferred compiler.
+3. Run bootstrap.sh
+
+## Installation
+Copy weld.exe (windows/dos) or weld (unix) to a directory that is available on your PATH environment variable

@@ -9,7 +9,7 @@
 #include once "options.bi"
 #include once "semver.bi"
 
-dim shared as string gFakefile
+dim shared as string gBuildSpecFile
 dim shared as string gModToBuild
 dim shared as string gCurDir
 dim shared as string gCurMod
@@ -23,7 +23,7 @@ declare function findmod( byref search as const string, byval mods as modlist pt
 declare function dobuild( byval mtb as module ptr, byval allmods as modlist ptr ) as integer
 
 gCurDir = curdir()
-gFakefile = gCurDir & SLASH & DEFAULT_BUILD_FILE
+gBuildSpecFile = gCurDir & SLASH & DEFAULT_BUILD_FILE
 gModToBuild = ""
 
 var iOpts = options.Parser
@@ -62,7 +62,7 @@ if iOpts.isSet(ag) andalso (iOpts.isSet(m) orelse iOpts.isSet(o)) then
         var ao = ""
         if iOpts.isSet(m) then am = iOpts.getArg(m)
         var at = "exe"
-        if fileexists(gFakefile) then
+        if fileexists(gBuildSpecFile) then
                 ? "ERROR: weld.it already exists."
                 end __line__
         endif
@@ -147,7 +147,7 @@ endif
 
 
 if iOpts.isSet(f) then
-        gFakefile = iOpts.getArg(f)
+        gBuildSpecFile = iOpts.getArg(f)
 
 endif
 
@@ -185,7 +185,7 @@ if iOpts.isSet(dumpit) then
         end 0
 endif
 
-if not(fileexists(gFakefile)) then
+if not(fileexists(gBuildSpecFile)) then
         'let's see if there's a src dir and try to build there too...
         if not(chdir("src")) then
                 var cres = 0
@@ -195,21 +195,21 @@ if not(fileexists(gFakefile)) then
                 elseif cres = 0 then
                         end
                 else
-                        ? "ERROR: Unable to locate " & gFakefile
+                        ? "ERROR: Unable to locate " & gBuildSpecFile
                         ? "*** Build can not proceed. ***"
                         end __line__
                 endif
         endif
 endif
 
-var mods = parse_fakefile(gFakefile)
+var mods = parse_buildspecfile(gBuildSpecFile)
 if mods = 0 then
-        ? "ERROR: Unknown error parsing " & gFakefile
+        ? "ERROR: Unknown error parsing " & gBuildSpecFile
         ? "*** Try finding an old priest and a young priest. ***"
         end __line__
 endif
 if mods->Size = 0 then
-        ? "ERROR: No Modules specified in " & gFakefile
+        ? "ERROR: No Modules specified in " & gBuildSpecFile
         ? "*** Maybe you have to blow in it like a Nintendo? ***"
         end __line__
 endif
@@ -262,7 +262,7 @@ function findmod( byref search as const string, byval mods as modlist ptr ) as m
 
         wend
 
-        ? using "ERROR: Module: & not found in weld.it: &"; search; gFakefile
+        ? using "ERROR: Module: & not found in weld.it: &"; search; gBuildSpecFile
         ? "*** Build can not proceed. ***"
         end __line__
         return 0

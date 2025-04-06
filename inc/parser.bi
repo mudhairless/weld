@@ -21,6 +21,6 @@ extern GLOBALS as globals_t
 extern COMPILERS as complist
 
 declare sub parser_init( )
-declare function parse_fakefile( byref fake_f as const string, byval ml as modlist ptr = 0 ) as modlist ptr
+declare function parse_buildspecfile( byref fake_f as const string, byval ml as modlist ptr = 0 ) as modlist ptr
 
 #endif

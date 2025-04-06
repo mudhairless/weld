@@ -61,12 +61,12 @@ sub parser_init( )
 
         if fileexists(GLOBAL_C) then
 
-                var v = parse_fakefile( GLOBAL_C )
+                var v = parse_buildspecfile( GLOBAL_C )
                 if v <> null then delete v
 
                 if fileexists( HOMEDIR_C ) andalso HOMEDIR_C <> GLOBAL_C then
 
-                        var v = parse_fakefile( HOMEDIR_C )
+                        var v = parse_buildspecfile( HOMEDIR_C )
                         if v <> null then delete v
 
                 endif
@@ -76,7 +76,7 @@ sub parser_init( )
 
         elseif fileexists( HOMEDIR_C ) andalso HOMEDIR_C <> GLOBAL_C then
 
-                var v = parse_fakefile( HOMEDIR_C )
+                var v = parse_buildspecfile( HOMEDIR_C )
                 if v <> null then delete v
 
                 if GLOBALS.builddir = "" then GLOBALS.builddir = ".obj"
@@ -98,9 +98,6 @@ sub parser_init( )
         endif
 
 end sub
-
-
-
 
 sub reporterror( byval linen as uinteger, byref message as const string )
 
@@ -133,21 +130,21 @@ function getTypeFromString( byref x as string ) as mtype
 
 end function
 
-function parse_fakefile( byref fake_f as const string, _
+function parse_buildspecfile( byref bs_file as const string, _
                         byval ml as modlist ptr = 0 ) as modlist ptr
 
         var ff = freefile
 
-        var res = open( fake_f, for binary, access read, as #ff )
-        if res <> 0 then reporterror( __line__,"Unable to open file: " & fake_f )
+        var res = open( bs_file, for binary, access read, as #ff )
+        if res <> 0 then reporterror( __line__, "Unable to open file: " & bs_file )
 
         var curLine = ""
-        var fakefile = ""
+        var buildSpecFile = ""
 
         while not eof(ff)
 
                 line input #ff, curLine
-                fakefile = fakefile & chr(1) & curLine
+                buildSpecFile = buildSpecFile & chr(1) & curLine
 
         wend
 
@@ -157,141 +154,136 @@ function parse_fakefile( byref fake_f as const string, _
 
         redim as string ffile()
 
-        strings.split(fakefile, ffile(), chr(1))
+        strings.split(buildSpecFile, ffile(), chr(1))
 
-        fakefile = ""
+        buildSpecFile = ""
 
         dim as string sections()
         dim as string keys()
         dim as string values()
 
-        var result = iif(ml = 0,new modlist,ml)
+        var result = iif(ml = 0, new modlist, ml)
 
-        listsections(ffile(),sections())
-        if ubound(sections) = 0 then reporterror(__line__,"Unable to parse fakefile.")
+        listsections(ffile(), sections())
+        if ubound(sections) = 0 then reporterror(__line__, "No Valid modules found in " & bs_file)
 
         for n as integer = lbound(sections) to ubound(sections)
 
-                listkeys(sections(n),ffile(),keys(),values())
+                listkeys(sections(n), ffile(), keys(), values())
 
                 select case lcase(sections(n))
-                        case "global"
+                case "global"
+                        for m as integer = lbound(keys) to ubound(keys)-1
+                                select case lcase(trim(keys(m)))
+                                case "options"
+                                        GLOBALS.options = GLOBALS.options & " " & values(m)
+                                case "builddir"
+                                        GLOBALS.builddir = values(m)
+                                case else
+                                        reporterror(__line__, "Unrecognized directive: " & keys(m) & " in module GLOBAL" )
+                                end select
+                        next m
+
+
+                case else
+                        if left(sections(n),1) = "*" then
+                                'compiler
+                                dim zz as compiler
+                                zz.name = right(sections(n),len(sections(n))-1)
+
+                                var zzc = findcompiler(zz.name)
 
                                 for m as integer = lbound(keys) to ubound(keys)-1
+
                                         select case lcase(trim(keys(m)))
-                                                case "options"
-                                                        GLOBALS.options = GLOBALS.options & " " & values(m)
-                                                case "builddir"
-                                                        GLOBALS.builddir = values(m)
-                                                case else
-                                                        reporterror(__line__, "Unrecognized directive: " & keys(m) & " in section GLOBAL" )
+                                        case "ext"
+                                                zz.extensions = values(m)
+                                                zzc = findcompiler(zz.extensions)
+                                        case "compile"
+                                                zz.compile_opts = values(m)
+                                        case "link"
+                                                zz.link_opts = values(m)
+                                        case "dylib"
+                                                zz.dylib_opts = values(m)
+                                        case "static"
+                                                zz.static_opts = values(m)
+                                        case else
+                                                reporterror(__line__, "Unrecognized directive: " & keys(m) & " in module *" & sections(n) )
                                         end select
                                 next m
 
-
-                        case else
-                                if left(sections(n),1) = "*" then
-                                        'compiler
-                                        dim zz as compiler
-                                        zz.name = right(sections(n),len(sections(n))-1)
-
-                                        var zzc = findcompiler(zz.name)
-
-                                        for m as integer = lbound(keys) to ubound(keys)-1
-
-                                                select case lcase(trim(keys(m)))
-                                                        case "ext"
-                                                                zz.extensions = values(m)
-                                                                zzc = findcompiler(zz.extensions)
-                                                        case "compile"
-                                                                zz.compile_opts = values(m)
-                                                        case "link"
-                                                                zz.link_opts = values(m)
-                                                        case "dylib"
-                                                                zz.dylib_opts = values(m)
-                                                        case "static"
-                                                                zz.static_opts = values(m)
-                                                        case else
-                                                                reporterror(__line__, "Unrecognized directive: " & keys(m) & " in section *" & sections(n) )
-                                                end select
-                                        next m
-
-                                        if zzc = 0 then
-                                                COMPILERS.PushBack( zz )
-                                        else
-                                                if zzc->name = "" then zzc->name = zz.name
-                                                if zz.extensions <> "" then zzc->extensions = zz.extensions
-                                                if zz.compile_opts <> "" then zzc->compile_opts = zz.compile_opts
-                                                if zz.link_opts <> "" then zzc->link_opts = zz.link_opts
-                                                if zz.dylib_opts <> "" then zzc->dylib_opts = zz.dylib_opts
-                                                if zz.static_opts <> "" then zzc->static_opts = zz.static_opts
-                                        endif
-
-
+                                if zzc = 0 then
+                                        COMPILERS.PushBack( zz )
                                 else
-                                        'module
-                                        dim zx as module
-                                        zx.name = sections(n)
+                                        if zzc->name = "" then zzc->name = zz.name
+                                        if zz.extensions <> "" then zzc->extensions = zz.extensions
+                                        if zz.compile_opts <> "" then zzc->compile_opts = zz.compile_opts
+                                        if zz.link_opts <> "" then zzc->link_opts = zz.link_opts
+                                        if zz.dylib_opts <> "" then zzc->dylib_opts = zz.dylib_opts
+                                        if zz.static_opts <> "" then zzc->static_opts = zz.static_opts
+                                endif
 
-                                        for m as integer = lbound(keys) to ubound(keys) - 1
-                                                platformdecider:
-                                                select case lcase(trim(keys(m)))
-                                                        case "link_options"
-                                                                zx.l_opts = trim(values(m))
 
-                                                        case "options"
-                                                                zx.c_opts = trim(values(m))
+                        else
+                                'module
+                                dim zx as module
+                                zx.name = sections(n)
 
-                                                        case "files"
-                                                                zx.files = trim(values(m))
-                                                                #if CURPLATFORM = "unix"
-                                                                strings.replace(zx.files,"\","/")
-                                                                #endif
+                                for m as integer = lbound(keys) to ubound(keys) - 1
+                                        platformdecider:
+                                        select case lcase(trim(keys(m)))
+                                        case "link_options"
+                                                zx.l_opts = trim(values(m))
 
-                                                        case "depends"
-                                                                zx.depends = trim(values(m))
+                                        case "options"
+                                                zx.c_opts = trim(values(m))
 
-                                                        case "output"
-                                                                zx.output_ = trim(values(m))
+                                        case "files"
+                                                zx.files = trim(values(m))
+                                                #if CURPLATFORM = "unix"
+                                                strings.replace(zx.files,"\","/")
+                                                #endif
 
-                                                        case "type"
-                                                                zx.type_ = getTypeFromString(values(m))
+                                        case "depends"
+                                                zx.depends = trim(values(m))
 
-                                                        case "main"
-                                                                zx.main_ = trim(values(m))
+                                        case "output"
+                                                zx.output_ = trim(values(m))
 
-                                                        case else
-                                                                var tempstr = trim(keys(m))
-                                                                if tempstr[0] = 64 then 'asc("@")
-                                                                        var sloc = instr(tempstr,":")
-                                                                        if sloc > 0 then
-                                                                                var plat = mid(tempstr,2,sloc-2)
-                                                                                var nkey = mid(tempstr,sloc+1)
-                                                                                if plat = CURPLATFORM then
-                                                                                        keys(m) = nkey
-                                                                                        goto platformdecider
-                                                                                endif
+                                        case "type"
+                                                zx.type_ = getTypeFromString(values(m))
 
-                                                                        else
-                                                                                reporterror(__line__,"Malformed directive: " & keys(m) & " in section " & sections(n) )
-                                                                        endif
+                                        case "main"
+                                                zx.main_ = trim(values(m))
 
-                                                                else
-
-                                                                        reporterror(__line__, "Unrecognized directive: " & keys(m) & " in section " & sections(n) )
+                                        case else
+                                                var tempstr = trim(keys(m))
+                                                if tempstr[0] = 64 then 'asc("@")
+                                                        var sloc = instr(tempstr,":")
+                                                        if sloc > 0 then
+                                                                var plat = mid(tempstr,2,sloc-2)
+                                                                var nkey = mid(tempstr,sloc+1)
+                                                                if plat = CURPLATFORM then
+                                                                        keys(m) = nkey
+                                                                        goto platformdecider
                                                                 endif
 
+                                                        else
+                                                                reporterror(__line__, "Malformed directive: " & keys(m) & " in module " & sections(n) )
+                                                        endif
 
+                                                else
 
-                                                end select
-                                        next m
+                                                        reporterror(__line__, "Unrecognized directive: " & keys(m) & " in module " & sections(n) )
+                                                endif
 
-                                        (result)->PushBack( zx )
+                                        end select
+                                next m
 
-                                end if
+                                (result)->PushBack( zx )
+
+                        end if
                 end select
-
-
 
         next n
 
