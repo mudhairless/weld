@@ -10,6 +10,7 @@ constructor module( byref rhs as const module )
 
         this.name = rhs.name
         this.c_opts = rhs.c_opts
+        this.l_opts = rhs.l_opts
         this.files = rhs.files
         this.depends = rhs.depends
         this.output_ = rhs.output_
@@ -24,6 +25,7 @@ destructor module
 
         this.name = ""
         this.c_opts = ""
+        this.l_opts = ""
         this.files = ""
         this.depends = ""
         this.output_ = ""
@@ -35,6 +37,7 @@ sub module.updatehash()
 
         this.hash = crc32( @(this.name[0]), len(this.name), -1 )
         this.hash = crc32( @(this.c_opts[0]), len(this.c_opts), this.hash )
+        this.hash = crc32( @(this.l_opts[0]), len(this.l_opts), this.hash )
         this.hash = crc32( @(this.files[0]), len(this.files), this.hash )
         this.hash = crc32( @(this.depends[0]), len(this.depends), this.hash )
         if this.output_ = "" then
