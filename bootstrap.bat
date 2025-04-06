@@ -21,7 +21,7 @@
 @cd submodules\fbefile
 @cmd /c winbuild-release.bat
 @cd ..\..
-@xcopy /E submodules\fbefile\inc inc
+@xcopy /E /Y submodules\fbefile\inc inc
 @copy submodules\fbefile\lib\libfbefile.a lib
 @copy submodules\fbefile\lib\libfbefilemt.a lib
 
